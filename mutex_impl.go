@@ -1,11 +1,12 @@
 package contest
 
 import (
+	"sync/atomic"
 	"time"
 )
 
 type contextMutex struct {
-	locked bool
+	locked uint32
 }
 
 func New() Mutex {
@@ -13,15 +14,15 @@ func New() Mutex {
 }
 
 func (mu *contextMutex) Lock() {
-	for mu.locked {
+	for atomic.LoadUint32(&mu.locked) != 0 {
 		time.Sleep(time.Microsecond)
 	}
-	mu.locked = true
+	atomic.StoreUint32(&mu.locked, 1)
 }
 
 func (mu *contextMutex) LockChannel() <-chan struct{} {
 	ch := make(chan struct{}, 1)
-	if !mu.locked {
+	if atomic.LoadUint32(&mu.locked) == 0 {
 		mu.Lock()
 		ch <- struct{}{}
 	}
@@ -29,5 +30,5 @@ func (mu *contextMutex) LockChannel() <-chan struct{} {
 }
 
 func (mu *contextMutex) Unlock() {
-	mu.locked = false
+	atomic.StoreUint32(&mu.locked, 0)
 }
