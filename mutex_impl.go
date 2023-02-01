@@ -14,10 +14,9 @@ func New() Mutex {
 }
 
 func (mu *contextMutex) Lock() {
-	for atomic.LoadUint32(&mu.locked) != 0 {
+	for !atomic.CompareAndSwapUint32(&mu.locked, 0, 1) {
 		time.Sleep(time.Microsecond)
 	}
-	atomic.StoreUint32(&mu.locked, 1)
 }
 
 func (mu *contextMutex) LockChannel() <-chan struct{} {
@@ -30,5 +29,5 @@ func (mu *contextMutex) LockChannel() <-chan struct{} {
 }
 
 func (mu *contextMutex) Unlock() {
-	atomic.StoreUint32(&mu.locked, 0)
+	atomic.CompareAndSwapUint32(&mu.locked, 1, 0)
 }
