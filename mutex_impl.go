@@ -1,20 +1,20 @@
 package contest
 
-type contextMutex struct {
+type contestMutex struct {
 	ch chan struct{}
 }
 
 func New() Mutex {
-	return &contextMutex{
+	return &contestMutex{
 		ch: make(chan struct{}, 1),
 	}
 }
 
-func (mu *contextMutex) Lock() {
+func (mu *contestMutex) Lock() {
 	mu.ch <- struct{}{}
 }
 
-func (mu *contextMutex) LockChannel() <-chan struct{} {
+func (mu *contestMutex) LockChannel() <-chan struct{} {
 	ch := make(chan struct{}, 1)
 	select {
 	case mu.ch <- struct{}{}:
@@ -24,6 +24,6 @@ func (mu *contextMutex) LockChannel() <-chan struct{} {
 	return ch
 }
 
-func (mu *contextMutex) Unlock() {
+func (mu *contestMutex) Unlock() {
 	<-mu.ch
 }
