@@ -1,33 +1,29 @@
 package contest
 
-import (
-	"sync/atomic"
-	"time"
-)
-
 type contextMutex struct {
-	locked uint32
+	ch chan struct{}
 }
 
 func New() Mutex {
-	return &contextMutex{}
+	return &contextMutex{
+		ch: make(chan struct{}, 1),
+	}
 }
 
 func (mu *contextMutex) Lock() {
-	for !atomic.CompareAndSwapUint32(&mu.locked, 0, 1) {
-		time.Sleep(time.Microsecond)
-	}
+	mu.ch <- struct{}{}
 }
 
 func (mu *contextMutex) LockChannel() <-chan struct{} {
 	ch := make(chan struct{}, 1)
-	if atomic.LoadUint32(&mu.locked) == 0 {
-		mu.Lock()
+	select {
+	case mu.ch <- struct{}{}:
 		ch <- struct{}{}
+	default:
 	}
 	return ch
 }
 
 func (mu *contextMutex) Unlock() {
-	atomic.CompareAndSwapUint32(&mu.locked, 1, 0)
+	<-mu.ch
 }
