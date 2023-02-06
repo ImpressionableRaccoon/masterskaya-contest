@@ -1,4 +1,4 @@
-# contest
+# contest-internal
 
 ## Задание для контеста Мастерской для go-разработчиков
 
@@ -34,7 +34,7 @@ mu.Unlock()
 
 2. Как `LockChannel` мьютекс
 ```go
-ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+ctx, cancel := context.WithTimeout(context.Background(). time.Second)
 defer cancel()
 select {
 case <-ctx.Done():
