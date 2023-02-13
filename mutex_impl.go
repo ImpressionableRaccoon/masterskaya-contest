@@ -5,25 +5,21 @@ type contestMutex struct {
 }
 
 func New() Mutex {
-	return &contestMutex{
+	mu := &contestMutex{
 		ch: make(chan struct{}, 1),
 	}
+	mu.ch <- struct{}{}
+	return mu
 }
 
 func (mu *contestMutex) Lock() {
-	mu.ch <- struct{}{}
+	<-mu.ch
 }
 
 func (mu *contestMutex) LockChannel() <-chan struct{} {
-	ch := make(chan struct{}, 1)
-	select {
-	case mu.ch <- struct{}{}:
-		ch <- struct{}{}
-	default:
-	}
-	return ch
+	return mu.ch
 }
 
 func (mu *contestMutex) Unlock() {
-	<-mu.ch
+	mu.ch <- struct{}{}
 }
